@@ -27,8 +27,9 @@
   </properties>
 
   <body>
-  <section name="Statement Builders">
-  <subsection name="SelectBuilder">
+  <section name="The SQL Builder Class">
+  <subsection name="The Problem">
+  
   <p>一个 Java 程序员面对的最痛苦的事情之一就是在 Java 代码中嵌入 SQL 语句。
 通常这么
 做是因为 SQL 要动态的生成-否则你可以将它们放到外部的文件或存储过程中。正如你已经
@@ -131,17 +132,7 @@ public String updatePersonSql() {
     <thead>
     <tr><th><p>方法</p></th><th><p>描述</p></th></tr></thead>
     <tbody>
-  <tr>
-    <td>
-      <code>BEGIN()</code> / <code>RESET()</code>
-    </td>
-    <td>这些方法清理 SelectBuilder 类的 ThreadLocal 的状态,而且
-准备构建新的语句。当开始一条新的语句时,BEGIN()读取
-得最好。当在执行中间因为某些原因(在某些条件下,也许
-处理逻辑需要一个完整的而且不同的语句)要清理一条语句
-时 RESET()读取的做好。
-    </td>
-  </tr>
+  
   <tr>
     <td>
       <code>SELECT(String)</code>
@@ -245,51 +236,7 @@ WHERE 和 HAVING 两者都自动串联 AND,这样使用是非
 多次调用,每次使用逗号来告诉它串联新的条件。
     </td>
   </tr>
-  <tr>
-    <td>
-      <code>SQL()</code>
-    </td>
-    <td>这会返回生成 SQL 而且重置 SelectBuilder 的状态(正如
-BEGIN()或 RESET()方法被调用)。因此,这个方法只能被调
-用一次!
-    </td>
-  </tr>
-    </tbody></table>
-  
-  <p>有两个方法会吸引你的眼球:BEGIN()和 SQL()。总之,每个 SelectBuilder 方法应该以
-调用 BEGIN()开始,以调用 SQL()结束。当然你可以在中途提取方法来打断你执行的逻
-辑,但是 SQL 生成的范围应该以 BEGIN()方法开始而且以 SQL()方法结束。BEGIN()方法清
-理 ThreadLocal 变量,来确保你不会不小心执行了前面的状态,而且 SQL()方法会基于这些
-调用,
-从最后一次调用 BEGIN()开始组装你的 SQL 语句。
-注意 BEGIN()有一个称为 RESET()
-的代替方法,它们所做的工作相同,只是 RESET()会在特定上下文中读取的更好。
-  </p>
-  <p>要按照上面示例的方式使用 SelectBuilder,你应该静态引入如下内容:
-  </p>
-<source>import static org.apache.ibatis.jdbc.SelectBuilder.*;</source>
-  <p>只要这个被引入了,
-那么你使用的类就会拥有 SelectBuilder 的所有可用的方法。
-下表就
-是可用方法的完整列表:
-  </p>
-   
-    </subsection>
-
-    <subsection name="SqlBuilder">
-    <p>和 SelectBuilder 相似,MyBatis 也包含一个一般性的 SqlBuilder。它包含 SelectBuilder
-的所有方法,还有构建 insert,update 和 delete 的方法。在 DeleteProvider,InsertProvider 或
-UpdateProvider 中(还有 SelectProvider)构建 SQL 字符串时这个类就很有用。
-    </p>
-    <p>在上述示例中要使用 SqlBuilder,你只需简单静态引入如下内容:</p>
-    <source>import static org.apache.ibatis.jdbc.SqlBuilder.*;</source>
-    <p>SqlBuilder 包含 SelectBuilder 中的所有方法,还有下面这些额外的方法:</p>
-      <table>
-      <thead>
-      <tr><th>方法 </th><th>描述</th></tr>
-      </thead>
-      <tbody>
-      <tr>
+   <tr>
   <td>
     <code>DELETE_FROM(String)</code>
   </td>
@@ -332,33 +279,36 @@ WHERE 语句!
 要插入的值。
 </td>
   </tr>
+    </tbody></table>
+  
+    </subsection>
+
+    <subsection name="SqlBuilder and SelectBuilder (DEPRECATED)">
+    <p>要按照上面示例的方式使用 SelectBuilder,你应该静态引入如下内容:
+  </p>
+    
+<source>import static org.apache.ibatis.jdbc.SelectBuilder.*;</source>
+  <p>只要这个被引入了,
+那么你使用的类就会拥有 SelectBuilder 的所有可用的方法。
+下表就
+是可用方法的完整列表:
+  </p>
+    <p>和 SelectBuilder 相似,MyBatis 也包含一个一般性的 SqlBuilder。它包含 SelectBuilder
+的所有方法,还有构建 insert,update 和 delete 的方法。在 DeleteProvider,InsertProvider 或
+UpdateProvider 中(还有 SelectProvider)构建 SQL 字符串时这个类就很有用。
+    </p>
+    <p>在上述示例中要使用 SqlBuilder,你只需简单静态引入如下内容:</p>
+    <source>import static org.apache.ibatis.jdbc.SqlBuilder.*;</source>
+    <p>SqlBuilder 包含 SelectBuilder 中的所有方法,还有下面这些额外的方法:</p>
+      <table>
+      <thead>
+      <tr><th>方法 </th><th>描述</th></tr>
+      </thead>
+      <tbody>
+     
       </tbody>
     </table>
 
-    <p>这里是一些示例:</p>
-
-<source><![CDATA[public String deletePersonSql() {
-  BEGIN(); // Clears ThreadLocal variable
-  DELETE_FROM("PERSON");
-  WHERE("ID = ${id}");
-  return SQL();
-}
-
-public String insertPersonSql() {
-  BEGIN(); // Clears ThreadLocal variable
-  INSERT_INTO("PERSON");
-  VALUES("ID, FIRST_NAME", "${id}, ${firstName}");
-  VALUES("LAST_NAME", "${lastName}");
-  return SQL();
-}
-
-public String updatePersonSql() {
-  BEGIN(); // Clears ThreadLocal variable
-  UPDATE("PERSON");
-  SET("FIRST_NAME = ${firstName}");
-  WHERE("ID = ${id}");
-  return SQL();
-}]]></source>  
   </subsection>
   </section>
   </body>
